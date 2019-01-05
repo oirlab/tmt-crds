@@ -4,7 +4,7 @@ specific policies for JWST:
 1. How to convert reference file basenames to fully specified paths.
 
 2. How to manage parameters for reference file Validator objects used
-in the certification of reference files. 
+in the certification of reference files.
 """
 import os.path
 import re
@@ -18,10 +18,10 @@ from crds.io import abstract
 
 # =======================================================================
 
-# These two functions decouple the generic reference file certifier program 
+# These two functions decouple the generic reference file certifier program
 # from observatory-unique ways of specifying and caching Validator parameters.
 
-from crds.jwst import TYPES, INSTRUMENTS, FILEKINDS, EXTENSIONS, INSTRUMENT_FIXERS, TYPE_FIXERS
+from crds.tmt import TYPES, INSTRUMENTS, FILEKINDS, EXTENSIONS, INSTRUMENT_FIXERS, TYPE_FIXERS
 
 from . import schema
 
@@ -34,8 +34,8 @@ suffix_to_filekind = TYPES.suffix_to_filekind
 filekind_to_suffix = TYPES.filekind_to_suffix
 get_all_tpninfos = TYPES.get_all_tpninfos
 
-from crds.jwst.pipeline import header_to_reftypes, header_to_pipelines
-from crds.jwst.pipeline import get_reftypes, get_pipelines
+from crds.tmt.pipeline import header_to_reftypes, header_to_pipelines
+from crds.tmt.pipeline import get_reftypes, get_pipelines
 
 # =======================================================================
 
@@ -84,7 +84,7 @@ def get_data_model_flat_dict(filepath):
     except Exception as exc:
         raise exceptions.ValidationError("JWST Data Models:", str(exc).replace("u'","'")) from exc
     return flat_dict
-    
+
 # =======================================================================
 
 def match_context_key(key):
@@ -187,7 +187,7 @@ def decompose_newstyle_name(filename):
     return path, observatory, instrument, filekind, serial, ext
 
 def properties_inside_mapping(filename):
-    """Load `filename`s mapping header to discover and 
+    """Load `filename`s mapping header to discover and
     return (instrument, filekind).
     """
     map = rmap.fetch_mapping(filename)
@@ -232,13 +232,13 @@ def ref_properties_from_header(filename):
     # For legacy files,  just use the root filename as the unique id
     path, parts, ext = _get_fields(filename)
     serial = os.path.basename(os.path.splitext(filename)[0])
-    header = data_file.get_free_header(filename, (), None, "jwst")
-    header["TELESCOP"] = header["TELESCOPE"] = header["META.TELESCOPE"] = "jwst"
+    header = data_file.get_free_header(filename, (), None, "tmt")
+    header["TELESCOP"] = header["TELESCOPE"] = header["META.TELESCOPE"] = "tmt"
     instrument = utils.header_to_instrument(header).lower()
     filekind = utils.get_any_of(header, FILEKIND_KEYWORDS, "UNDEFINED").lower()
     assert instrument in INSTRUMENTS, "Invalid instrument " + repr(instrument)
     assert filekind in FILEKINDS, "Invalid file type " + repr(filekind)
-    return path, "jwst", instrument, filekind, serial, ext
+    return path, "tmt", instrument, filekind, serial, ext
 
 # =============================================================================
 
@@ -247,37 +247,37 @@ def reference_keys_to_dataset_keys(rmapping, header):
     relevant to datasets.  So for ACS biasfile the reference says BINAXIS1 but
     the dataset says NUMCOLS.  This would convert { "BINAXIS1": 1024 } to {
     "NUMCOLS" : 1024 }.
-    
+
     In general,  rmap parkeys are matched against datset values and are defined
     as dataset header keywords.   For refactoring though,  what's initially
     available are reference file keywords...  which need to be mapped into the
     terms rmaps know:  dataset keywords.
     """
     header = dict(header)
-    
+
     # Basic common pattern translations
     translations = {
             "META.EXPOSURE.P_EXPTYPE" : "META.EXPOSURE.TYPE",
             "P_EXP_TY" : "META.EXPOSURE.TYPE",
-    
+
             "META.INSTRUMENT.P_BAND" : "META.INSTRUMENT.BAND",
             "P_BAND" : "META.INSTRUMENT.BAND",
-              
+
             "META.INSTRUMENT.P_DETECTOR"  : "META.INSTRUMENT.DETECTOR",
             "P_DETECT"  : "META.INSTRUMENT.DETECTOR",
 
             "META.INSTRUMENT.P_CHANNEL" : "META.INSTRUMENT.CHANNEL",
             "P_CHANNE" : "META.INSTRUMENT.CHANNEL",
-            
+
             "META.INSTRUMENT.P_FILTER" : "META.INSTRUMENT.FILTER",
             "P_FILTER"  : "META.INSTRUMENT.FILTER",
-            
+
             "META.INSTRUMENT.P_PUPIL"  : "META.INSTRUMENT.PUPIL",
             "P_PUPIL" : "META.INSTRUMENT.PUPIL",
-            
+
             "META.INSTRUMENT.P_MODULE"  : "META.INSTRUMENT.MODULE",
             "P_MODULE" : "META.INSTRUMENT.MODULE",
-            
+
             "META.SUBARRAY.P_SUBARRAY" : "META.SUBARRAY.NAME",
             "P_SUBARR" : "META.SUBARRAY.NAME",
 
@@ -288,7 +288,7 @@ def reference_keys_to_dataset_keys(rmapping, header):
             "META.EXPOSURE.P_READPATT" : "META.EXPOSURE.READPATT",
             "P_READPA" : "META.EXPOSURE.READPATT",
 
-            # vvvv Speculative,  not currently defined or required by CAL vvvvv 
+            # vvvv Speculative,  not currently defined or required by CAL vvvvv
             "META.INSTRUMENT.PCORONAGRAPH" : "META.INSTRUMENT.CORONAGRAPH",
             "P_CORONM" : "META.INSTRUMENT.CORONAGRAPH",
         }
@@ -298,25 +298,25 @@ def reference_keys_to_dataset_keys(rmapping, header):
         translations.update(rmapping.reference_to_dataset)
     except AttributeError:
         pass
-    
+
     log.verbose("reference_to_dataset translations:\n", log.PP(translations), verbosity=60)
     log.verbose("reference_to_dataset input header:\n", log.PP(header), verbosity=80)
-    
+
     for key in header:
         # Match META.X.P_SOMETHING or P_SOMETH
         if (key.split(".")[-1].startswith("P_")) and key not in translations:
-            log.warning("CRDS-pattern-like keyword", repr(key), 
+            log.warning("CRDS-pattern-like keyword", repr(key),
                         "w/o CRDS translation to corresponding dataset keyword.")
-            log.info("Pattern-like keyword", repr(key), 
+            log.info("Pattern-like keyword", repr(key),
                      "may be misspelled or missing its translation in CRDS.  Pattern will not be used.")
-            log.info("The translation for", repr(key), 
+            log.info("The translation for", repr(key),
                      "can be defined in crds.jwst.locate or rmap header reference_to_dataset field.")
             log.info("If this is not a pattern keyword, adding a translation to 'not-a-pattern'",
                      "will suppress this warning.")
-    
+
     # Add replacements for translations *if* the existing untranslated value
     # is poor and the translated value is better defined.   This is to do
-    # translations w/o replacing valid/concrete DM values with something 
+    # translations w/o replacing valid/concrete DM values with something
     # like guessed values of "UNDEFINED" or "N/A".
     for rkey in sorted(translations):
         if rkey in header:
@@ -324,12 +324,12 @@ def reference_keys_to_dataset_keys(rmapping, header):
             dval = header.get(translations[rkey], None)
             rval = header[rkey]
             if rval not in [None, "UNDEFINED"] and rval != dval:
-                log.info("Setting", repr(dkey), "=", repr(dval), 
+                log.info("Setting", repr(dkey), "=", repr(dval),
                          "to value of", repr(rkey), "=", repr(rval))
                 header[dkey] = rval
-    
+
     header = abstract.cross_strap_header(header)
-    
+
     # NOTE:  the hacks below happen after cross-strapping and pattern handling
     # so if the keywords are still undefined they're undefined.  They have to
     # be explicitly defined as UNDEFINED somehow since they're nearly universally
@@ -438,12 +438,12 @@ def locate_file(refname, mode=None):
     specific sub-directory for it based on the filename alone,  not the file contents.
     """
     if mode is  None:
-        mode = config.get_crds_ref_subdir_mode(observatory="jwst")
+        mode = config.get_crds_ref_subdir_mode(observatory="tmt")
     if mode == "instrument":
         instrument = utils.file_to_instrument(refname)
         rootdir = locate_dir(instrument, mode)
     elif mode == "flat":
-        rootdir = config.get_crds_refpath("jwst")
+        rootdir = config.get_crds_refpath("tmt")
     else:
         raise ValueError("Unhandled reference file location mode " + repr(mode))
     return  os.path.join(rootdir, os.path.basename(refname))
@@ -451,10 +451,10 @@ def locate_file(refname, mode=None):
 def locate_dir(instrument, mode=None):
     """Locate the instrument specific directory for a reference file."""
     if mode is  None:
-        mode = config.get_crds_ref_subdir_mode(observatory="jwst")
+        mode = config.get_crds_ref_subdir_mode(observatory="tmt")
     else:
         config.check_crds_ref_subdir_mode(mode)
-    crds_refpath = config.get_crds_refpath("jwst")
+    crds_refpath = config.get_crds_refpath("tmt")
     if mode == "instrument":   # use simple names inside CRDS cache.
         rootdir = os.path.join(crds_refpath, instrument.lower())
         if not os.path.exists(rootdir):
