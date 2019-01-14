@@ -440,7 +440,8 @@ def locate_file(refname, mode=None):
     if mode is  None:
         mode = config.get_crds_ref_subdir_mode(observatory="tmt")
     if mode == "instrument":
-        instrument = utils.file_to_instrument(refname)
+        instrument = "iris" #FIXME, temporarily hardcode instrument
+        #instrument = utils.file_to_instrument(refname)
         rootdir = locate_dir(instrument, mode)
     elif mode == "flat":
         rootdir = config.get_crds_refpath("tmt")
