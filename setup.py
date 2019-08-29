@@ -24,6 +24,7 @@ setup_pars = {
         'crds.hst',
         'crds.jwst',
         'crds.tobs',
+        'crds.tmt',
 
         'crds.tests',
         ],
@@ -44,6 +45,7 @@ setup_pars = {
         'crds.hst' : 'crds/hst',
         'crds.jwst' : 'crds/jwst',
         'crds.tobs' : 'crds/tobs',
+        'crds.tmt' : 'crds/tmt',
 
         'crds.tests' : 'crds/tests',
         },
@@ -69,6 +71,16 @@ setup_pars = {
             'specs/*.json',
             ],
         'crds.tobs': [
+            '*.dat',
+            '*.yaml',
+            '*.json',
+            'tpns/*.tpn',
+            'tpns/includes/*.tpn',
+            'specs/*.spec',
+            'specs/*.rmap',
+            'specs/*.json',
+            ],
+        'crds.tmt': [
             '*.dat',
             '*.yaml',
             '*.json',
