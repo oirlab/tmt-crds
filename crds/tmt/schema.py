@@ -25,11 +25,7 @@ from crds.certify import TpnInfo
 # ====================================================================================
 
 INSTR_PREFIX = {
-    "fgs" : "FGS_",
-    "miri" : "MIR_",
-    "nircam" : "NRC_",
-    "niriss" : "NIS_",
-    "nirspec" : "NRS_",
+    "iris" : "IRI_",
     }
 
 def get_exptypes(instrument=None):
