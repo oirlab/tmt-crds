@@ -4,7 +4,7 @@ from crds.certify import reftypes
 
 HERE  = os.path.abspath(os.path.dirname(__file__) or ".")
 
-TYPES = reftypes.from_package_file("jwst", __file__)
+TYPES = reftypes.from_package_file("tmt", __file__)
 
 OBSERVATORY = TYPES.observatory
 INSTRUMENTS = TYPES.instruments
