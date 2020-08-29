@@ -35,7 +35,6 @@ filekind_to_suffix = TYPES.filekind_to_suffix
 get_all_tpninfos = TYPES.get_all_tpninfos
 
 from crds.tmt.pipeline import header_to_reftypes, header_to_pipelines
-from crds.tmt.pipeline import get_reftypes, get_pipelines
 
 # =======================================================================
 
@@ -112,7 +111,7 @@ def get_file_properties(filename):
 
     >> get_file_properties("test_data/s7g1700gl_dead.fits")
     """
-    if rmap.is_mapping(filename):
+    if config.is_mapping(filename):
         try:
             return decompose_newstyle_name(filename)[2:4]
         except Exception:
@@ -338,13 +337,13 @@ def reference_keys_to_dataset_keys(rmapping, header):
     # variables so they need to be incidentally defined.  This currently doesn't
     # work out if the rmap doesn't use them.  Condition variables are eval'ed in
     # expressions.
-    
+
     if "SUBARRAY" not in header:
         header["SUBARRAY"] = header["META.SUBARRAY.NAME"] = "UNDEFINED"
-                
+
     if "EXP_TYPE" not in header:
         header["EXP_TYPE"] = header["META.EXPOSURE.TYPE"] = "UNDEFINED"
-                
+
     if "USEAFTER" not in header and "META.USEAFTER" in header:
         header["USEAFTER"] = header["META.USEAFTER"]
     if "USEAFTER" not in header and "META.USEAFTER" in header:
@@ -362,7 +361,7 @@ def reference_keys_to_dataset_keys(rmapping, header):
         header["TIME-OBS"] = header["META.OBSERVATION.TIME"] = reformatted[1]
 
     log.verbose("reference_to_dataset output header:\n", log.PP(header), verbosity=80)
-    
+
     return header
 
 # =============================================================================
@@ -475,7 +474,7 @@ def locate_dir(instrument, mode=None):
 # XXXX the first translation should be the FITS keyword assuming there is one!!
 
 CROSS_STRAPPED_KEYWORDS = {
-                           
+
     # META.REF_FILE.X is now obsolete but retained for backward compatibility.
     # it was replaced by META.X
 
@@ -493,7 +492,7 @@ CROSS_STRAPPED_KEYWORDS = {
     "META.CALIBRATION_SOFTWARE_VERSION" : ["CAL_VER", "CALIBRATION_SOFTWARE_VERSION"],
     "META.OBSERVATION.DATE" : ["DATE-OBS"],
     "META.OBSERVATION.TIME" : ["TIME-OBS"],
-    
+
 
     # These should all be stock DM:FITS,  automatic
     # "META.INSTRUMENT.BAND" : ["BAND"],
@@ -510,7 +509,7 @@ CROSS_STRAPPED_KEYWORDS = {
     # "META.SUBARRAY.YSIZE" : ["SUBSIZE2"],
     # "META.SUBARRAY.FASTAXIS" : ["FASTAXIS"],
     # "META.SUBARRAY.SLOWAXIS" : ["SLOWAXIS"],
-    
+
     # "META.EXPOSURE.TYPE" : ["EXP_TYPE"],
     # "META.EXPOSURE.READPATT" : ["READPATT"],
 
@@ -602,6 +601,9 @@ def _hack_fits_translation(model_key):
 
 log.append_crds_filter(add_fits_keywords)
 
+def disable_fits_annotations():
+    log.remove_crds_filter(add_fits_keywords)
+
 # ============================================================================
 
 def test():
@@ -609,4 +611,3 @@ def test():
     import doctest
     from . import locate
     return doctest.testmod(locate)
-
