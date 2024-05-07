@@ -1,26 +1,4 @@
 #! /bin/sh
-
-cd `dirname $0`
-
-# The clean script removes temporary and junk files that should not be
-# committed to the source code repo.
-if (test -e clean)
-then
-    ./clean
-fi
-
-if [ "$1" = "--skip-types" ]; then
-    shift;
-    dont_skip_types=0
-else
-    dont_skip_types=1
-fi
-
-
-rm -f install.log
-
-st=0
-
 # CRDS type specifications are configured in code as individual files in the
 # project "specs" subdirectories.  This step creates combined versions of the
 # specs files for faster loading at runtime by first removing the existing
@@ -39,31 +17,8 @@ st=0
 # or changing CRDS type specs,  after which the combined spec file is effectively
 # source code.
 
-if [ $dont_skip_types = 1 ]; then
-    find . -name combined_specs.json | xargs rm
+rm crds/tmt/specs/combined_specs.json
 
-    find crds/hst/specs crds/jwst/specs crds/tobs/specs crds/tmt/specs -name '*.rmap' | xargs python -m crds.refactoring.checksum
-    
-    python -m crds.hst
-    python -m crds.jwst
-    python -m crds.tobs
-    python -m crds.tmt
-fi
+find crds/tmt/specs -name '*.rmap' | xargs python -m crds.refactoring.checksum
 
-python setup.py install $* --force  >> install.log
-st=$st$?
-
-# Optional CRDS test data is only installed by developers using ./install
-# to install CRDS from source code.  To support testing the 
-# setup_test_cache script should also be run to install other test files.
-python setup_data.py install --force >>install.log
-st=$st$?
-
-if (test -e clean)
-then
-    ./clean
-fi
-
-echo final status $st
-st=`echo $st | tr -d 0 | cut -c1-1`
-exit $st
+python -m crds.tmt
