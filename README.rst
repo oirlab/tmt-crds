@@ -1,3 +1,5 @@
+**Obsolete**: see https://github.com/oirlab/liger_iris_crds
+
 ====
 CRDS
 ====
